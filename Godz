@@ -1,0 +1,200 @@
+# Godzlocal UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local autoWalk = false
+local noclip = false
+local toggleKeyWalk = Enum.KeyCode.F   -- tecla para AutoWalk
+local toggleKeyNoclip = Enum.KeyCode.G -- tecla para Noclip
+local walkSpeed = 16
+
+-- Função: criar GUI
+local function createGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MainPanelGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    -- Painel principal
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 350, 0, 220)
+    frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = screenGui
+
+    -- Bordas arredondadas
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = frame
+
+    -- Sombra
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    shadow.Size = UDim2.new(1, 40, 1, 40)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045217"
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.5
+    shadow.ZIndex = -1
+    shadow.Parent = frame
+
+    -- Título
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -60, 0, 40)
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.Text = "PATRIK GOD"
+    title.TextScaled = true
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(255, 215, 0) -- dourado
+    title.Font = Enum.Font.GothamBold
+    title.Parent = frame
+
+    -- Botão fechar
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 50, 0, 30)
+    closeBtn.Position = UDim2.new(1, -55, 0, 5)
+    closeBtn.Text = "X"
+    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Parent = frame
+
+    -- Botão AutoWalk
+    local walkBtn = Instance.new("TextButton")
+    walkBtn.Size = UDim2.new(0, 250, 0, 50)
+    walkBtn.Position = UDim2.new(0.5, -125, 0.35, -25)
+    walkBtn.Text = "Ativar AutoWalk"
+    walkBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    walkBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    walkBtn.Parent = frame
+
+    -- Botão Noclip
+    local noclipBtn = Instance.new("TextButton")
+    noclipBtn.Size = UDim2.new(0, 250, 0, 50)
+    noclipBtn.Position = UDim2.new(0.5, -125, 0.75, -25)
+    noclipBtn.Text = "Ativar Noclip"
+    noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+    noclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    noclipBtn.Parent = frame
+
+    -- Botão reabrir
+    local reopenBtn = Instance.new("ImageButton")
+    reopenBtn.Size = UDim2.new(0, 50, 0, 50)
+    reopenBtn.Position = UDim2.new(0, 20, 0.8, 0)
+    reopenBtn.Image = "rbxassetid://3926305904"
+    reopenBtn.ImageRectOffset = Vector2.new(324, 364)
+    reopenBtn.ImageRectSize = Vector2.new(36, 36)
+    reopenBtn.Visible = false
+    reopenBtn.Parent = screenGui
+
+    ----------------------------------------------------------------
+    -- Funções AutoWalk
+    local function stopMoving(humanoid)
+        if humanoid then
+            humanoid:Move(Vector3.new(), true)
+            humanoid.WalkSpeed = 30
+        end
+    end
+
+    local function toggleWalk()
+        autoWalk = not autoWalk
+        local char = player.Character
+        local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+        if not autoWalk then
+            stopMoving(humanoid)
+        end
+
+        if autoWalk then
+            walkBtn.Text = "Desativar AutoWalk"
+            walkBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        else
+            walkBtn.Text = "Ativar AutoWalk"
+            walkBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        end
+    end
+
+    walkBtn.MouseButton1Click:Connect(toggleWalk)
+
+    ----------------------------------------------------------------
+    -- Funções Noclip
+    local function toggleNoclip()
+        noclip = not noclip
+        if noclip then
+            noclipBtn.Text = "Desativar Noclip"
+            noclipBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+        else
+            noclipBtn.Text = "Ativar Noclip"
+            noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+        end
+    end
+
+    noclipBtn.MouseButton1Click:Connect(toggleNoclip)
+
+    ----------------------------------------------------------------
+    -- Teclas de atalho
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == toggleKeyWalk then
+            toggleWalk()
+        elseif input.KeyCode == toggleKeyNoclip then
+            toggleNoclip()
+        end
+    end)
+
+    ----------------------------------------------------------------
+    -- Loop principal
+    RunService.RenderStepped:Connect(function()
+        -- AutoWalk
+        if autoWalk then
+            local char = player.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if hrp and humanoid then
+                    local forward = hrp.CFrame.LookVector
+                    humanoid.WalkSpeed = walkSpeed
+                    humanoid:Move(forward, true)
+                end
+            end
+        end
+
+        -- Noclip
+        if noclip then
+            local char = player.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+    end)
+
+    ----------------------------------------------------------------
+    -- Fechar/reabrir GUI
+    closeBtn.MouseButton1Click:Connect(function()
+        frame.Visible = false
+        reopenBtn.Visible = true
+    end)
+
+    reopenBtn.MouseButton1Click:Connect(function()
+        frame.Visible = true
+        reopenBtn.Visible = false
+    end)
+end
+
+-- Criar GUI inicial
+createGui()
+
+-- Recriar GUI ao respawn
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if not player.PlayerGui:FindFirstChild("MainPanelGui") then
+        createGui()
+    end
+end)
